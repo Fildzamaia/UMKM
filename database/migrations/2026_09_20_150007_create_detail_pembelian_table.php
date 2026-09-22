@@ -12,22 +12,27 @@ return new class extends Migration
             $table->string('id_detail_pembelian')->primary();
 
             $table->string('id_pembelian');
-            $table->string('id_bahan');
+            $table->string('id_varian');
 
-            $table->decimal('jumlah', 12, 2);
+            $table->unsignedInteger('jumlah');
             $table->decimal('harga_satuan', 14, 2);
 
             $table->foreign('id_pembelian')
                 ->references('id_pembelian')
-                ->on('pembelian_bahan')
+                ->on('pembelian_produk')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+
+            $table->foreign('id_varian')
+                ->references('id_varian')
+                ->on('varian_produk')
                 ->restrictOnDelete()
                 ->cascadeOnUpdate();
 
-            $table->foreign('id_bahan')
-                ->references('id_bahan')
-                ->on('bahan_baku')
-                ->restrictOnDelete()
-                ->cascadeOnUpdate();
+            $table->unique([
+                'id_pembelian',
+                'id_varian'
+            ]);
         });
     }
 

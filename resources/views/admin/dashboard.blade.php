@@ -175,9 +175,10 @@
 
 
         <div class="card">
-            Bahan Baku
+            Pembelian Produk
+
             <div class="number">
-                {{ $stats['bahan'] }}
+                {{ $stats['pembelian'] }}
             </div>
         </div>
 
@@ -227,12 +228,11 @@
         <div class="menu-card">
 
             <h3>
-                Bahan Baku
+                Pembelian Produk
             </h3>
 
             <p>
-                Monitoring material
-                produksi.
+                Mencatat pembelian produk jadi dari supplier. 
             </p>
 
         </div>
@@ -241,12 +241,11 @@
         <div class="menu-card">
 
             <h3>
-                Produksi
+                Supplier
             </h3>
 
             <p>
-                Batch produksi dan
-                replenishment stok.
+                Mengelola data supplier produk UMKM.
             </p>
 
         </div>
@@ -273,8 +272,8 @@
             </h3>
 
             <p>
-                Pemasukan dan
-                pengeluaran.
+                Monitoring penjualan, 
+                pengeluaran, dan arus keuangan. 
             </p>
 
         </div>

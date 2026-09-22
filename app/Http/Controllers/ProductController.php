@@ -318,7 +318,7 @@ class ProductController extends Controller
                             $warna,
 
                         /*
-                        Produk baru belum diproduksi.
+                        Stok awal varian akan ditambahkan melalui pembelian produk.
                         */
                         'stok' => 0,
 

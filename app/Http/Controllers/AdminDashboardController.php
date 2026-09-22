@@ -11,7 +11,7 @@ class AdminDashboardController extends Controller
         $stats = [
             'produk' => DB::table('produk')->count(),
             'varian' => DB::table('varian_produk')->count(),
-            'bahan' => DB::table('bahan_baku')->count(),
+            'pembelian' => DB::table('pembelian_produk')->count(),
 
             'low_stock_produk' => DB::table('varian_produk')
                 ->whereColumn('stok', '<=', 'stok_minimum')

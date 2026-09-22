@@ -122,10 +122,10 @@
 
 <div class="login-card">
 
-    <h1>Login Customer</h1>
+    <h1>Login Akun</h1>
 
     <div class="subtitle">
-        Masuk untuk melanjutkan belanja.
+        Masuk sebagai Customer, Kasir, atau Admin.
     </div>
 
     @if ($errors->any())
@@ -139,7 +139,7 @@
 
     <form
         method="POST"
-        action="{{ route('login.customer') }}"
+        action="{{ route('login.process') }}"
     >
 
         @csrf

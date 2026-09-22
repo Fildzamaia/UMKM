@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\BomController;
+use App\Http\Controllers\Customers\Catalog;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,13 +48,13 @@ Route::middleware('guest')->group(function () {
     // Customer login
     Route::get('/login', [
         LoginController::class,
-        'showCustomerLogin'
+        'showLogin'
     ])->name('login');
 
     Route::post('/login', [
         LoginController::class,
-        'customerLogin'
-    ])->name('login.customer');
+        'Login'
+    ])->name('login.process');
 
 
     // Customer register
@@ -69,17 +69,6 @@ Route::middleware('guest')->group(function () {
     ])->name('register.process');
 
 
-    // Staff login
-    Route::get('/staff/login', [
-        LoginController::class,
-        'showStaffLogin'
-    ])->name('staff.login');
-
-    Route::post('/staff/login', [
-        LoginController::class,
-        'staffLogin'
-    ])->name('staff.login.process');
-
     Route::get(
         '/produk/{idProduk}/varian',
         [
@@ -87,24 +76,6 @@ Route::middleware('guest')->group(function () {
             'variants'
         ]
     )->name('admin.products.variants');
-
-
-    Route::get(
-        '/varian/{idVarian}/bom',
-        [
-            BomController::class,
-            'edit'
-        ]
-    )->name('admin.bom.edit');
-
-
-    Route::put(
-        '/varian/{idVarian}/bom',
-        [
-            BomController::class,
-            'update'
-        ]
-    )->name('admin.bom.update');
 
 });
 
@@ -205,4 +176,13 @@ Route::middleware([
         return view('customer.dashboard');
     })->name('customer.dashboard');
 
+    Route::get(
+        '/customer/katalog',
+        [Catalog::class, 'index']
+    )->name('customer.catalog');
+    
+    Route::get(
+        '/customer/produk/{idProduk}',
+        [Catalog::class, 'show']
+    )->name('customer.products.show');
 });
