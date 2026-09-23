@@ -1,11 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\LoginController;
+
+// ADMIN
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\StaffAccountController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\VariantController;
+
+// CUSTOMER MILIK TIM
 use App\Http\Controllers\Customers\Catalog;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +29,6 @@ use App\Http\Controllers\Customers\Catalog;
 */
 
 Route::get('/', function () {
-
     $products = DB::table('produk')
         ->join(
             'kategori_produk',
@@ -22,10 +36,7 @@ Route::get('/', function () {
             '=',
             'kategori_produk.id_kategori'
         )
-        ->where(
-            'produk.status_produk',
-            'AKTIF'
-        )
+        ->where('produk.status_produk', 'AKTIF')
         ->select(
             'produk.*',
             'kategori_produk.nama_kategori'
@@ -33,7 +44,6 @@ Route::get('/', function () {
         ->get();
 
     return view('home', compact('products'));
-
 })->name('home');
 
 
@@ -45,7 +55,6 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
 
-    // Customer login
     Route::get('/login', [
         LoginController::class,
         'showLogin'
@@ -53,11 +62,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/login', [
         LoginController::class,
-        'Login'
+        'login'
     ])->name('login.process');
 
 
-    // Customer register
     Route::get('/register', [
         LoginController::class,
         'showRegister'
@@ -67,16 +75,6 @@ Route::middleware('guest')->group(function () {
         LoginController::class,
         'register'
     ])->name('register.process');
-
-
-    Route::get(
-        '/produk/{idProduk}/varian',
-        [
-            ProductController::class,
-            'variants'
-        ]
-    )->name('admin.products.variants');
-
 });
 
 
@@ -103,49 +101,322 @@ Route::post('/logout', [
 Route::middleware([
     'auth',
     'role:ADMIN'
-])->prefix('admin')->group(function () {
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-    Route::get(
-        '/',
-        [
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/', [
             AdminDashboardController::class,
             'index'
-        ]
-    )->name('admin.dashboard');
+        ])->name('dashboard');
 
 
-    Route::get(
-        '/produk',
-        [
+        /*
+        |--------------------------------------------------------------------------
+        | Akun
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/akun', [
+            StaffAccountController::class,
+            'index'
+        ])->name('accounts.index');
+
+        Route::get('/akun/tambah', [
+            StaffAccountController::class,
+            'create'
+        ])->name('accounts.create');
+
+        Route::post('/akun', [
+            StaffAccountController::class,
+            'store'
+        ])->name('accounts.store');
+
+        Route::get('/akun/{id}/edit', [
+            StaffAccountController::class,
+            'edit'
+        ])->name('accounts.edit');
+
+        Route::put('/akun/{id}', [
+            StaffAccountController::class,
+            'update'
+        ])->name('accounts.update');
+
+        Route::patch('/akun/{id}/status', [
+            StaffAccountController::class,
+            'toggleStatus'
+        ])->name('accounts.status');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kategori
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/kategori', [
+            CategoryController::class,
+            'index'
+        ])->name('categories.index');
+
+        Route::post('/kategori', [
+            CategoryController::class,
+            'store'
+        ])->name('categories.store');
+
+        Route::put('/kategori/{id}', [
+            CategoryController::class,
+            'update'
+        ])->name('categories.update');
+
+        Route::delete('/kategori/{id}', [
+            CategoryController::class,
+            'destroy'
+        ])->name('categories.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Produk
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/produk', [
             ProductController::class,
             'index'
-        ]
-    )->name('admin.products.index');
+        ])->name('products.index');
 
-
-    Route::get(
-        '/produk/tambah',
-        [
+        Route::get('/produk/tambah', [
             ProductController::class,
             'create'
-        ]
-    )->name('admin.products.create');
+        ])->name('products.create');
 
-
-    Route::post(
-        '/produk',
-        [
+        Route::post('/produk', [
             ProductController::class,
             'store'
-        ]
-    )->name('admin.products.store');
+        ])->name('products.store');
 
-});
+        Route::get('/produk/{id}/edit', [
+            ProductController::class,
+            'edit'
+        ])->name('products.edit');
+
+        Route::put('/produk/{id}', [
+            ProductController::class,
+            'update'
+        ])->name('products.update');
+
+        Route::delete('/produk/{id}', [
+            ProductController::class,
+            'destroy'
+        ])->name('products.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Varian
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/produk/{idProduk}/varian', [
+            VariantController::class,
+            'index'
+        ])->name('variants.index');
+
+        Route::post('/produk/{idProduk}/varian', [
+            VariantController::class,
+            'store'
+        ])->name('variants.store');
+
+        Route::put('/varian/{id}', [
+            VariantController::class,
+            'update'
+        ])->name('variants.update');
+
+        Route::delete('/varian/{id}', [
+            VariantController::class,
+            'destroy'
+        ])->name('variants.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Supplier
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/supplier', [
+            SupplierController::class,
+            'index'
+        ])->name('suppliers.index');
+
+        Route::get('/supplier/tambah', [
+            SupplierController::class,
+            'create'
+        ])->name('suppliers.create');
+
+        Route::post('/supplier', [
+            SupplierController::class,
+            'store'
+        ])->name('suppliers.store');
+
+        Route::get('/supplier/{id}/edit', [
+            SupplierController::class,
+            'edit'
+        ])->name('suppliers.edit');
+
+        Route::put('/supplier/{id}', [
+            SupplierController::class,
+            'update'
+        ])->name('suppliers.update');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pembelian Produk
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/pembelian', [
+            PurchaseController::class,
+            'index'
+        ])->name('purchases.index');
+
+        Route::get('/pembelian/tambah', [
+            PurchaseController::class,
+            'create'
+        ])->name('purchases.create');
+
+        Route::post('/pembelian', [
+            PurchaseController::class,
+            'store'
+        ])->name('purchases.store');
+
+        Route::get('/pembelian/{id}', [
+            PurchaseController::class,
+            'show'
+        ])->name('purchases.show');
+
+        Route::patch('/pembelian/{id}/terima', [
+            PurchaseController::class,
+            'receive'
+        ])->name('purchases.receive');
+
+        Route::patch('/pembelian/{id}/batal', [
+            PurchaseController::class,
+            'cancel'
+        ])->name('purchases.cancel');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Penjualan
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/penjualan', [
+            SalesController::class,
+            'index'
+        ])->name('sales.index');
+
+        Route::get('/penjualan/{id}', [
+            SalesController::class,
+            'show'
+        ])->name('sales.show');
+
+        Route::patch('/penjualan/{id}/status', [
+            SalesController::class,
+            'updateStatus'
+        ])->name('sales.status');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Promo
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/promo', [
+            PromoController::class,
+            'index'
+        ])->name('promos.index');
+
+        Route::get('/promo/tambah', [
+            PromoController::class,
+            'create'
+        ])->name('promos.create');
+
+        Route::post('/promo', [
+            PromoController::class,
+            'store'
+        ])->name('promos.store');
+
+        Route::get('/promo/{id}/edit', [
+            PromoController::class,
+            'edit'
+        ])->name('promos.edit');
+
+        Route::put('/promo/{id}', [
+            PromoController::class,
+            'update'
+        ])->name('promos.update');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pengeluaran
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/pengeluaran', [
+            ExpenseController::class,
+            'index'
+        ])->name('expenses.index');
+
+        Route::get('/pengeluaran/tambah', [
+            ExpenseController::class,
+            'create'
+        ])->name('expenses.create');
+
+        Route::post('/pengeluaran', [
+            ExpenseController::class,
+            'store'
+        ])->name('expenses.store');
+
+        Route::get('/pengeluaran/{id}/edit', [
+            ExpenseController::class,
+            'edit'
+        ])->name('expenses.edit');
+
+        Route::put('/pengeluaran/{id}', [
+            ExpenseController::class,
+            'update'
+        ])->name('expenses.update');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Laporan
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/laporan', [
+            ReportController::class,
+            'index'
+        ])->name('reports.index');
+    });
 
 
 /*
 |--------------------------------------------------------------------------
-| KASIR
+| KASIR - MILIK TIM
 |--------------------------------------------------------------------------
 */
 
@@ -157,13 +428,12 @@ Route::middleware([
     Route::get('/kasir', function () {
         return view('kasir.dashboard');
     })->name('kasir.dashboard');
-
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| CUSTOMER
+| CUSTOMER - MILIK TIM
 |--------------------------------------------------------------------------
 */
 
@@ -176,13 +446,13 @@ Route::middleware([
         return view('customer.dashboard');
     })->name('customer.dashboard');
 
-    Route::get(
-        '/customer/katalog',
-        [Catalog::class, 'index']
-    )->name('customer.catalog');
-    
-    Route::get(
-        '/customer/produk/{idProduk}',
-        [Catalog::class, 'show']
-    )->name('customer.products.show');
+    Route::get('/customer/katalog', [
+        Catalog::class,
+        'index'
+    ])->name('customer.catalog');
+
+    Route::get('/customer/produk/{idProduk}', [
+        Catalog::class,
+        'show'
+    ])->name('customer.products.show');
 });
