@@ -9,12 +9,6 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN SEMUA ROLE
-    |--------------------------------------------------------------------------
-    */
-
     public function showLogin()
     {
         return view('auth.login');
@@ -23,48 +17,64 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'username' => [
+                'required',
+                'string',
+            ],
+            'password' => [
+                'required',
+                'string',
+            ],
         ]);
 
-        $akun = Akun::where(
-            'username', 
-            $validated['username']
-            )->first();
+        $identifier = $validated['username'];
 
-            if (
-                !$akun ||
-                !Hash::check(
-                    $validated['password'],
-                    $akun->password_hash
-                )
-            ){
-                return back()
+        $akun = Akun::query()
+            ->where('id_akun', $identifier)
+            ->orWhere('username', $identifier)
+            ->orWhere('email', $identifier)
+            ->first();
+
+        if (
+            !$akun ||
+            !Hash::check(
+                $validated['password'],
+                $akun->password_hash
+            )
+        ) {
+            return back()
                 ->withErrors([
-                    'username' => 
-                         'Username atau password salah.'
+                    'username' =>
+                        'ID akun, username, email, atau password salah.',
                 ])
                 ->onlyInput('username');
-            }
-            Auth::login($akun);
+        }
 
-            $request->session()->regenerate();
+        if ($akun->status_akun !== 'AKTIF') {
+            return back()
+                ->withErrors([
+                    'username' => 'Akun sedang tidak aktif.',
+                ])
+                ->onlyInput('username');
+        }
 
-            return match ($akun->tipe_akun) {
-                'ADMIN' => redirect()
-                   ->route('admin.dashboard'),
-                'KASIR' => redirect()
-                   ->route('kasir.dashboard'),
-                'CUSTOMER' => redirect()
-                   ->route('customer.dashboard'),
-                
-                   default => $this->rejectUnknownRole($request),
-            };
+        Auth::login($akun);
+
+        $request->session()->regenerate();
+
+        return match ($akun->tipe_akun) {
+            'ADMIN' => redirect()
+                ->route('admin.dashboard'),
+
+            'KASIR' => redirect()
+                ->route('kasir.dashboard'),
+
+            'CUSTOMER' => redirect()
+                ->route('customer.dashboard'),
+
+            default => $this->rejectUnknownRole($request),
+        };
     }
-
-    /*
-    REGISTER KHUSUS CUSTOMER
-    */
 
     public function showRegister()
     {
@@ -83,8 +93,8 @@ class LoginController extends Controller
             'username' => [
                 'required',
                 'string',
-                 'max:255',
-                 'unique:akun,username',
+                'max:100',
+                'unique:akun,username',
             ],
 
             'email' => [
@@ -103,75 +113,63 @@ class LoginController extends Controller
             'alamat' => [
                 'nullable',
                 'string',
+                'max:1000',
             ],
 
             'password' => [
                 'required',
+                'string',
                 'min:6',
                 'confirmed',
             ],
         ]);
 
-        $lastCustomer = Akun::where(
-            'id_akun',
-            'like',
-            'CUST%'
-        )
-             ->orderByRaw(
+        $lastCustomer = Akun::query()
+            ->where('id_akun', 'like', 'CUST%')
+            ->orderByRaw(
                 'CAST(SUBSTRING(id_akun, 5) AS UNSIGNED) DESC'
-             )
-             ->first();
+            )
+            ->first();
 
-             $nectNumber = $lastCustomer
-             ? ((int)substr(
-                $lastCustomer->id_akun, 
-                4
-             )) + 1
-             : 1; 
+        $nextNumber = $lastCustomer
+            ? ((int) substr($lastCustomer->id_akun, 4)) + 1
+            : 1;
 
-             $idAkun = 'CUST' . str_pad(
-                $nextNumber,
-                3,
-                '0',
-                STR_PAD_LEFT
-            );
+        $idAkun = 'CUST' . str_pad(
+            $nextNumber,
+            3,
+            '0',
+            STR_PAD_LEFT
+        );
 
-             $akun = Akun::create([
-                'id_akun' => $idAkun,
-                'nama' => validated['nama'],
-                'username' => validated['username'],
+        $akun = Akun::create([
+            'id_akun' => $idAkun,
+            'nama' => $validated['nama'],
+            'username' => $validated['username'],
+            'password_hash' => Hash::make(
+                $validated['password']
+            ),
+            'email' => $validated['email'] ?? null,
+            'no_telp' => $validated['no_telp'],
+            'alamat' => $validated['alamat'] ?? null,
+            'tipe_akun' => 'CUSTOMER',
+            'status_akun' => 'AKTIF',
+        ]);
 
-                'password_hash' => Hash::make(
-                    $validated['password']
-                ),
+        Auth::login($akun);
 
-                'email' => validated['email'] ?? null,
-                'no_telp' => validated['no_telp'],
-                'alamat' => validated['alamat'] ?? null,
-                'tipe_akun' => 'CUSTOMER',
-                'status_akun' => 'AKTIF'
-            ]);
+        $request->session()->regenerate();
 
-            Auth::Login($akun);
-
-            $request->session()->regenerate();
-
-            return redirect()
-                ->route('customer.dashboard');
+        return redirect()
+            ->route('customer.dashboard');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ROLE TIDAK DIKENAL
-    |--------------------------------------------------------------------------
-    */
-    
     private function rejectUnknownRole(Request $request)
     {
         Auth::logout();
 
         $request->session()->invalidate();
-        $reqeust->session()->regenerateToken();
+        $request->session()->regenerateToken();
 
         return redirect()
             ->route('login')
@@ -179,12 +177,6 @@ class LoginController extends Controller
                 'username' => 'Tipe akun tidak dikenali.',
             ]);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOGOUT
-    |--------------------------------------------------------------------------
-    */
 
     public function logout(Request $request)
     {

@@ -12,8 +12,7 @@ class RoleMiddleware
         Request $request,
         Closure $next,
         string ...$roles
-    ): Response
-    {
+    ): Response {
         if (!$request->user()) {
             return redirect()->route('login');
         }
@@ -23,7 +22,10 @@ class RoleMiddleware
             $roles,
             true
         )) {
-            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+            abort(
+                403,
+                'Anda tidak memiliki akses ke halaman ini.'
+            );
         }
 
         return $next($request);

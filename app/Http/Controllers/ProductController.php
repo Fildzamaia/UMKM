@@ -7,46 +7,50 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = DB::table('produk')
+        $query = DB::table('produk as p')
             ->join(
-                'kategori_produk',
-                'produk.id_kategori',
+                'kategori_produk as k',
+                'p.id_kategori',
                 '=',
-                'kategori_produk.id_kategori'
+                'k.id_kategori'
             )
             ->leftJoin(
-                'varian_produk',
-                'produk.id_produk',
+                'varian_produk as v',
+                'p.id_produk',
                 '=',
-                'varian_produk.id_produk'
+                'v.id_produk'
             )
             ->select(
-                'produk.id_produk',
-                'produk.nama_produk',
-                'produk.harga_jual',
-                'produk.gambar_produk',
-                'produk.status_produk',
-                'kategori_produk.nama_kategori',
-
-                DB::raw(
-                    'COUNT(varian_produk.id_varian) as total_varian'
-                ),
-
-                DB::raw(
-                    'COALESCE(SUM(varian_produk.stok), 0) as total_stok'
-                )
+                'p.*',
+                'k.nama_kategori',
+                DB::raw('COUNT(v.id_varian) as jumlah_varian'),
+                DB::raw('COALESCE(SUM(v.stok), 0) as total_stok')
             )
             ->groupBy(
-                'produk.id_produk',
-                'produk.nama_produk',
-                'produk.harga_jual',
-                'produk.gambar_produk',
-                'produk.status_produk',
-                'kategori_produk.nama_kategori'
-            )
-            ->orderBy('produk.id_produk')
+                'p.id_produk',
+                'p.id_kategori',
+                'p.nama_produk',
+                'p.harga_jual',
+                'p.deskripsi',
+                'p.gambar_produk',
+                'p.status_produk',
+                'p.created_at',
+                'p.updated_at',
+                'k.nama_kategori'
+            );
+
+        if ($request->filled('q')) {
+            $query->where(
+                'p.nama_produk',
+                'like',
+                '%'.$request->q.'%'
+            );
+        }
+
+        $products = $query
+            ->orderBy('p.nama_produk')
             ->get();
 
         return view(
@@ -54,7 +58,6 @@ class ProductController extends Controller
             compact('products')
         );
     }
-
 
     public function create()
     {
@@ -68,277 +71,170 @@ class ProductController extends Controller
         );
     }
 
-    public function variants(string $idProduk)
-    {
-        $product = DB::table('produk')
-            ->where(
-                'id_produk',
-                $idProduk
-            )
-            ->first();
-
-        abort_if(!$product, 404);
-
-        $variants = DB::table('varian_produk')
-            ->where(
-                'id_produk',
-                $idProduk
-            )
-            ->orderBy('warna')
-            ->orderByRaw("
-                FIELD(
-                    ukuran,
-                    'S',
-                    'M',
-                    'L',
-                    'XL'
-                )
-            ")
-            ->get();
-
-        return view(
-            'admin.products.variants',
-            compact(
-                'product',
-                'variants'
-            )
-        );
-    }
-
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'id_kategori' => [
-                'required',
-                'exists:kategori_produk,id_kategori'
-            ],
+        $validated = $this->validateProduct($request);
 
-            'nama_produk' => [
-                'required',
-                'max:255'
-            ],
+        $lastId = DB::table('produk')
+            ->orderByDesc('id_produk')
+            ->value('id_produk');
 
-            'harga_jual' => [
-                'required',
-                'numeric',
-                'min:1'
-            ],
-
-            'deskripsi' => [
-                'nullable'
-            ],
-
-            'gambar_produk' => [
-                'nullable',
-                'max:255'
-            ],
-
-            'ukuran' => [
-                'required',
-                'array',
-                'min:1'
-            ],
-
-            'ukuran.*' => [
-                'in:S,M,L,XL'
-            ],
-
-            'warna' => [
-                'required'
-            ],
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALISASI WARNA
-        |--------------------------------------------------------------------------
-        */
-
-        $warnaInput = explode(
-            ',',
-            $validated['warna']
-        );
-
-        $warnaList = [];
-
-        foreach ($warnaInput as $warna) {
-
-            $warna = strtolower(
-                trim(
-                    preg_replace(
-                        '/\s+/',
-                        ' ',
-                        $warna
-                    )
-                )
-            );
-
-            if ($warna !== '') {
-                $warnaList[] = $warna;
-            }
-        }
-
-        $warnaList = array_values(
-            array_unique($warnaList)
-        );
-
-
-        if (count($warnaList) === 0) {
-
-            return back()
-                ->withErrors([
-                    'warna' => 'Minimal satu warna harus diisi.'
-                ])
-                ->withInput();
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE ID PRODUK
-        |--------------------------------------------------------------------------
-        */
-
-        $lastProduct = DB::table('produk')
-            ->orderByRaw(
-                'CAST(SUBSTRING(id_produk, 4) AS UNSIGNED) DESC'
-            )
-            ->first();
-
-        $nextProductNumber = $lastProduct
-            ? ((int) substr($lastProduct->id_produk, 3)) + 1
+        $number = $lastId
+            ? ((int) substr($lastId, 3)) + 1
             : 1;
 
-        $idProduk = 'PRD' . str_pad(
-            $nextProductNumber,
+        $productId = 'PRD'.str_pad(
+            $number,
             3,
             '0',
             STR_PAD_LEFT
         );
 
+        $imagePath = $this->storeImage(
+            $request,
+            $productId
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | GENERATE VARIANT START NUMBER
-        |--------------------------------------------------------------------------
-        */
+        DB::table('produk')->insert([
+            'id_produk' => $productId,
+            'id_kategori' => $validated['id_kategori'],
+            'nama_produk' => $validated['nama_produk'],
+            'harga_jual' => $validated['harga_jual'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'gambar_produk' => $imagePath,
+            'status_produk' => $validated['status_produk'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        $lastVariant = DB::table('varian_produk')
-            ->orderByRaw(
-                'CAST(SUBSTRING(id_varian, 4) AS UNSIGNED) DESC'
-            )
+        return redirect()
+            ->route('admin.variants.index', $productId)
+            ->with(
+                'success',
+                'Produk dibuat. Tambahkan varian ukuran dan warna.'
+            );
+    }
+
+    public function edit(string $id)
+    {
+        $product = DB::table('produk')
+            ->where('id_produk', $id)
             ->first();
 
-        $nextVariantNumber = $lastVariant
-            ? ((int) substr($lastVariant->id_varian, 3)) + 1
-            : 1;
+        abort_if(!$product, 404);
 
+        $categories = DB::table('kategori_produk')
+            ->orderBy('nama_kategori')
+            ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | SIMPAN PRODUK + VARIAN SECARA ATOMIK
-        |--------------------------------------------------------------------------
-        */
+        return view(
+            'admin.products.edit',
+            compact('product', 'categories')
+        );
+    }
 
-        DB::transaction(function () use (
-            $validated,
-            $warnaList,
-            $idProduk,
-            &$nextVariantNumber
-        ) {
+    public function update(Request $request, string $id)
+    {
+        $validated = $this->validateProduct($request);
 
-            $gambar = null;
+        $data = [
+            'id_kategori' => $validated['id_kategori'],
+            'nama_produk' => $validated['nama_produk'],
+            'harga_jual' => $validated['harga_jual'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'status_produk' => $validated['status_produk'],
+            'updated_at' => now(),
+        ];
 
-            if (!empty($validated['gambar_produk'])) {
+        $newImage = $this->storeImage($request, $id);
 
-                $gambar =
-                    'images/products/' .
-                    basename(
-                        $validated['gambar_produk']
-                    );
-            }
+        if ($newImage !== null) {
+            $data['gambar_produk'] = $newImage;
+        }
 
-
-            DB::table('produk')->insert([
-                'id_produk' => $idProduk,
-
-                'id_kategori' =>
-                    $validated['id_kategori'],
-
-                'nama_produk' =>
-                    $validated['nama_produk'],
-
-                'harga_jual' =>
-                    $validated['harga_jual'],
-
-                'deskripsi' =>
-                    $validated['deskripsi'] ?? null,
-
-                'gambar_produk' =>
-                    $gambar,
-
-                'status_produk' =>
-                    'AKTIF',
-
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-
-            foreach ($warnaList as $warna) {
-
-                foreach (
-                    $validated['ukuran']
-                    as $ukuran
-                ) {
-
-                    $idVarian =
-                        'VAR' .
-                        str_pad(
-                            $nextVariantNumber,
-                            3,
-                            '0',
-                            STR_PAD_LEFT
-                        );
-
-                    DB::table(
-                        'varian_produk'
-                    )->insert([
-                        'id_varian' =>
-                            $idVarian,
-
-                        'id_produk' =>
-                            $idProduk,
-
-                        'ukuran' =>
-                            $ukuran,
-
-                        'warna' =>
-                            $warna,
-
-                        /*
-                        Stok awal varian akan ditambahkan melalui pembelian produk.
-                        */
-                        'stok' => 0,
-
-                        'stok_minimum' => 5,
-
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    $nextVariantNumber++;
-                }
-            }
-        });
-
+        DB::table('produk')
+            ->where('id_produk', $id)
+            ->update($data);
 
         return redirect()
             ->route('admin.products.index')
-            ->with(
-                'success',
-                'Produk dan varian berhasil ditambahkan.'
+            ->with('success', 'Produk diperbarui.');
+    }
+
+    public function destroy(string $id)
+    {
+        $product = DB::table('produk')
+            ->where('id_produk', $id)
+            ->first();
+
+        abort_if(!$product, 404);
+
+        $hasVariants = DB::table('varian_produk')
+            ->where('id_produk', $id)
+            ->exists();
+
+        if ($hasVariants) {
+            return back()->withErrors([
+                'produk' => 'Produk tidak dapat dihapus karena sudah memiliki varian. Nonaktifkan produk jika tidak ingin menjualnya lagi.',
+            ]);
+        }
+
+        DB::transaction(function () use ($id) {
+            DB::table('promo_produk')
+                ->where('id_produk', $id)
+                ->delete();
+
+            DB::table('produk')
+                ->where('id_produk', $id)
+                ->delete();
+        });
+
+        if (!empty($product->gambar_produk)) {
+            $imagePath = public_path(
+                'images/products/'.$product->gambar_produk
             );
+
+            if (is_file($imagePath)) {
+                @unlink($imagePath);
+            }
+        }
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'Produk berhasil dihapus.');
+    }
+
+    private function validateProduct(Request $request): array
+    {
+        return $request->validate([
+            'id_kategori' =>
+                'required|exists:kategori_produk,id_kategori',
+            'nama_produk' => 'required|max:255',
+            'harga_jual' => 'required|numeric|min:1',
+            'deskripsi' => 'nullable',
+            'gambar' => 'nullable|image|max:3072',
+            'status_produk' => 'required|in:AKTIF,NONAKTIF',
+        ]);
+    }
+
+    private function storeImage(
+        Request $request,
+        string $productId
+    ): ?string {
+        if (!$request->hasFile('gambar')) {
+            return null;
+        }
+
+        $file = $request->file('gambar');
+        $name = $productId
+            .'-'.time()
+            .'.'.$file->extension();
+
+        $file->move(
+            public_path('images/products'),
+            $name
+        );
+
+        return $name;
     }
 }
