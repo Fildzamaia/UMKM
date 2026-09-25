@@ -3,7 +3,8 @@
 @section('content')
     <div class="page-head">
         <div>
-            <h1>POS / Transaksi Baru</h1>
+            <p class="eyebrow">Point of Sale</p>
+            <h1>Transaksi Baru</h1>
             <p class="muted">Pilih varian untuk menambahkannya ke keranjang.</p>
         </div>
     </div>
@@ -115,25 +116,27 @@
                 <fieldset id="member">
                     <legend>Pembeli</legend>
 
-                    <label class="inline">
-                        <input
-                            type="radio"
-                            name="tipe_pembeli"
-                            value="guest"
-                            @checked(old('tipe_pembeli', 'guest') === 'guest')
-                        >
-                        Guest
-                    </label>
+                    <div class="segmented">
+                        <label class="inline">
+                            <input
+                                type="radio"
+                                name="tipe_pembeli"
+                                value="guest"
+                                @checked(old('tipe_pembeli', 'guest') === 'guest')
+                            >
+                            Guest
+                        </label>
 
-                    <label class="inline">
-                        <input
-                            type="radio"
-                            name="tipe_pembeli"
-                            value="member"
-                            @checked(old('tipe_pembeli') === 'member')
-                        >
-                        Member
-                    </label>
+                        <label class="inline">
+                            <input
+                                type="radio"
+                                name="tipe_pembeli"
+                                value="member"
+                                @checked(old('tipe_pembeli') === 'member')
+                            >
+                            Member
+                        </label>
+                    </div>
 
                     <div id="member-fields" class="stack">
                         <input
@@ -166,25 +169,27 @@
                 <fieldset>
                     <legend>Pembayaran</legend>
 
-                    <label class="inline">
-                        <input
-                            type="radio"
-                            name="metode_pembayaran"
-                            value="TUNAI"
-                            @checked(old('metode_pembayaran', 'TUNAI') === 'TUNAI')
-                        >
-                        Tunai
-                    </label>
+                    <div class="segmented">
+                        <label class="inline">
+                            <input
+                                type="radio"
+                                name="metode_pembayaran"
+                                value="TUNAI"
+                                @checked(old('metode_pembayaran', 'TUNAI') === 'TUNAI')
+                            >
+                            Tunai
+                        </label>
 
-                    <label class="inline">
-                        <input
-                            type="radio"
-                            name="metode_pembayaran"
-                            value="QR"
-                            @checked(old('metode_pembayaran') === 'QR')
-                        >
-                        QR
-                    </label>
+                        <label class="inline">
+                            <input
+                                type="radio"
+                                name="metode_pembayaran"
+                                value="QR"
+                                @checked(old('metode_pembayaran') === 'QR')
+                            >
+                            QR
+                        </label>
+                    </div>
 
                     <div id="cash-fields" class="stack">
                         <label for="uang-diterima">Uang diterima</label>
@@ -235,147 +240,298 @@
     <style>
         .pos-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 390px;
-            gap: 20px;
+            grid-template-columns: minmax(0, 1fr) 400px;
+            gap: 22px;
             align-items: start;
         }
 
         .pos-filter {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 200px;
+            grid-template-columns: minmax(0, 1fr) 220px;
             gap: 10px;
-            margin-bottom: 12px;
-            padding: 12px;
+            margin-bottom: 16px;
+            padding: 14px;
         }
 
         .pos-products {
             display: grid;
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .pos-product {
+            display: flex;
+            flex-direction: column;
+            padding: 18px;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .pos-product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(40, 37, 32, .09);
+        }
+
+        #pos-no-result {
+            grid-column: 1 / -1;
+            text-align: center;
         }
 
         .pos-product-head {
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .pos-product-head > div:first-child strong {
+            font-size: 15px;
+        }
+
+        .pos-product-head > div:first-child .muted {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .pos-product-head .num strong {
+            display: block;
+            font-size: 16px;
+        }
+
+        .pos-product-head .num s {
+            font-size: 12px;
+        }
+
+        .pos-product-head .badge.promo {
+            margin-bottom: 6px;
         }
 
         .pos-variants {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
+            margin-top: auto;
         }
 
         .variant-btn {
+            min-width: 76px;
+            padding: 8px 11px;
             display: grid;
             gap: 2px;
-            padding: 7px 11px;
-            border: 1px solid #d9d3cb;
-            border-radius: 8px;
-            background: #fff;
-            font: inherit;
+            color: var(--black);
+            background: var(--field);
+            border: 1px solid var(--border);
+            border-radius: 4px;
             text-align: left;
             cursor: pointer;
+            transition: background .15s, border-color .15s;
         }
 
-        .variant-btn:hover:not(:disabled) {
-            border-color: #151515;
+        .variant-btn span {
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .variant-btn small {
-            color: #77716a;
+            color: var(--gray);
+            font-size: 11px;
+        }
+
+        .variant-btn:hover:not(:disabled) {
+            background: #fff;
+            border-color: var(--black);
         }
 
         .variant-btn:disabled {
-            background: #f3f1ee;
-            color: #a8a29a;
-            text-decoration: line-through;
+            color: #b3aea6;
+            background: transparent;
+            border-style: dashed;
             cursor: not-allowed;
         }
 
-        .pos-cart {
-            position: sticky;
-            top: 90px;
+        .variant-btn:disabled span {
+            text-decoration: line-through;
         }
 
-        .cart-table th,
+        .variant-btn:disabled small {
+            color: var(--danger);
+        }
+
+        /* Keranjang */
+        .pos-cart {
+            position: sticky;
+            top: 96px;
+            padding: 24px;
+        }
+
+        .cart-table th {
+            padding: 8px 6px;
+            background: transparent;
+        }
+
         .cart-table td {
-            padding: 8px 4px;
+            padding: 11px 6px;
+            font-size: 13px;
+        }
+
+        .cart-table th:first-child,
+        .cart-table td:first-child {
+            padding-left: 0;
+        }
+
+        .cart-table td .muted {
+            margin-top: 3px;
+            font-size: 11px;
         }
 
         .cart-table input {
-            width: 64px;
-            padding: 5px 6px;
+            width: 62px;
+            height: 34px;
+            padding: 0 8px;
             text-align: right;
         }
 
         .cart-remove {
-            padding: 2px 8px;
-            border: 0;
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            color: var(--gray);
             background: none;
-            color: #a3261b;
+            border: 0;
+            border-radius: 50%;
             font-size: 18px;
             cursor: pointer;
         }
 
+        .cart-remove:hover {
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+
         #cart-empty {
-            margin: 10px 0;
+            margin: 14px 0 0;
+            padding: 22px;
+            background: var(--field);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            text-align: center;
         }
 
         .pos-cart fieldset {
-            margin: 16px 0 0;
+            margin: 22px 0 0;
             padding: 0;
             border: 0;
         }
 
         .pos-cart legend {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            padding: 0;
+            font-size: 10px;
             font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 4px;
+            background: var(--cream);
+            border-radius: 6px;
         }
 
         label.inline {
-            display: inline-flex;
+            position: relative;
+            min-height: 36px;
+            margin: 0;
+            display: flex;
             align-items: center;
-            gap: 6px;
-            margin-right: 14px;
-            font-weight: 500;
+            justify-content: center;
+            color: var(--gray);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         label.inline input {
-            width: auto;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        label.inline:has(input:checked) {
+            color: #fff;
+            background: var(--black);
+        }
+
+        label.inline:has(input:focus-visible) {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         .stack {
             display: grid;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 12px;
+        }
+
+        .stack label {
+            margin-bottom: 0;
+        }
+
+        .stack .muted {
+            font-size: 12px;
         }
 
         .pos-total {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #e9e5df;
-            font-size: 18px;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pos-total span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .pos-total strong {
+            font-family: "DM Serif Display", serif;
+            font-size: 32px;
+            font-weight: 400;
         }
 
         #poin-preview {
             min-height: 1.4em;
-            margin: 4px 0 12px;
+            margin: 6px 0 14px;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .pos-submit {
             width: 100%;
+            min-height: 50px;
+            font-size: 14px;
         }
 
         .pos-note {
-            margin-top: 8px;
-            font-size: 12px;
+            margin-top: 10px;
+            font-size: 11px;
+            text-align: center;
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 1180px) {
             .pos-grid {
                 grid-template-columns: minmax(0, 1fr);
             }
@@ -386,7 +542,8 @@
         }
 
         @media (max-width: 560px) {
-            .pos-filter {
+            .pos-filter,
+            .pos-products {
                 grid-template-columns: minmax(0, 1fr);
             }
         }

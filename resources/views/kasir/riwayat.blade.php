@@ -3,6 +3,7 @@
 @section('content')
     <div class="page-head">
         <div>
+            <p class="eyebrow">Transaksi Offline</p>
             <h1>Riwayat Transaksi</h1>
             <p class="muted">
                 Transaksi offline yang diproses oleh {{ auth()->user()->nama }}

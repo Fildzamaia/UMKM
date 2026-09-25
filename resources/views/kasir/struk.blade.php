@@ -3,8 +3,8 @@
 @section('content')
     <div class="page-head no-print">
         <div>
+            <p class="eyebrow">Transaksi {{ $sale->id_penjualan }}</p>
             <h1>Struk Transaksi</h1>
-            <p class="muted">{{ $sale->id_penjualan }}</p>
         </div>
 
         <div class="struk-actions">
@@ -18,7 +18,8 @@
 
     <div class="card struk">
         <div class="struk-head">
-            <strong>FORMA</strong>
+            <strong>KALA</strong>
+            <span class="eyebrow">Studio</span>
             <div>{{ $sale->id_penjualan }}</div>
             <div class="muted">{{ $sale->tanggal_penjualan->format('d/m/Y H:i') }}</div>
         </div>
@@ -97,43 +98,93 @@
         }
 
         .struk {
-            max-width: 560px;
+            max-width: 520px;
+            padding: 30px;
         }
 
         .struk-head {
-            margin-bottom: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px dashed var(--border);
             text-align: center;
         }
 
         .struk-head strong {
-            font-size: 18px;
-            letter-spacing: .08em;
+            display: block;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 8px;
+        }
+
+        .struk-head .eyebrow {
+            display: block;
+            margin: 2px 0 12px;
         }
 
         .struk-meta {
             display: grid;
             grid-template-columns: max-content 1fr;
-            gap: 4px 14px;
-            margin: 0 0 14px;
+            gap: 6px 16px;
+            margin: 0 0 18px;
+            font-size: 13px;
         }
 
         .struk-meta dt {
-            color: #77716a;
+            color: var(--gray);
         }
 
         .struk-meta dd {
             margin: 0;
         }
 
+        .struk table th {
+            background: transparent;
+        }
+
+        .struk table th:first-child,
+        .struk table td:first-child {
+            padding-left: 0;
+        }
+
+        .struk table th:last-child,
+        .struk table td:last-child {
+            padding-right: 0;
+        }
+
         .struk-total {
             display: flex;
             justify-content: space-between;
-            margin-top: 14px;
-            font-size: 18px;
+            align-items: baseline;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .struk-total span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .struk-total strong {
+            font-family: "DM Serif Display", serif;
+            font-size: 28px;
+            font-weight: 400;
+        }
+
+        .struk > .muted {
+            margin-top: 8px;
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .struk-foot {
-            margin-top: 14px;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+            color: var(--gray);
+            font-weight: 400;
             text-align: center;
         }
 
@@ -141,6 +192,7 @@
             .struk {
                 max-width: none;
                 border: 0;
+                box-shadow: none;
             }
         }
     </style>
