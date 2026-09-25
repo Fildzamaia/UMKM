@@ -22,18 +22,15 @@ return new class extends Migration
                 ->cascadeOnUpdate();
         });
 
-        DB::statement("
-            ALTER TABLE pengeluaran
-            MODIFY jenis_pengeluaran ENUM(
-                'PEMBELIAN_PRODUK',
-                'LISTRIK',
-                'INTERNET',
-                'SEWA',
-                'ONGKIR',
-                'PERAWATAN',
-                'LAINNYA'
-            ) NOT NULL
-        ");
+        $this->setJenisPengeluaran([
+            'PEMBELIAN_PRODUK',
+            'LISTRIK',
+            'INTERNET',
+            'SEWA',
+            'ONGKIR',
+            'PERAWATAN',
+            'LAINNYA',
+        ]);
     }
 
     public function down(): void
@@ -48,16 +45,38 @@ return new class extends Migration
             $table->dropColumn('id_pembelian');
         });
 
-        DB::statement("
-            ALTER TABLE pengeluaran
-            MODIFY jenis_pengeluaran ENUM(
-                'LISTRIK',
-                'INTERNET',
-                'SEWA',
-                'ONGKIR',
-                'PERAWATAN',
-                'LAINNYA'
-            ) NOT NULL
-        ");
+        $this->setJenisPengeluaran([
+            'LISTRIK',
+            'INTERNET',
+            'SEWA',
+            'ONGKIR',
+            'PERAWATAN',
+            'LAINNYA',
+        ]);
+    }
+
+    /**
+     * MySQL/MariaDB tetap memakai ALTER ... MODIFY seperti sebelumnya.
+     * Driver lain (SQLite untuk test) tidak mengenal MODIFY, jadi kolom
+     * diubah lewat Schema builder.
+     */
+    private function setJenisPengeluaran(array $values): void
+    {
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            $list = implode(',', array_map(
+                fn (string $value) => "'".$value."'",
+                $values
+            ));
+
+            DB::statement(
+                'ALTER TABLE pengeluaran MODIFY jenis_pengeluaran ENUM('.$list.') NOT NULL'
+            );
+
+            return;
+        }
+
+        Schema::table('pengeluaran', function (Blueprint $table) use ($values) {
+            $table->enum('jenis_pengeluaran', $values)->change();
+        });
     }
 };

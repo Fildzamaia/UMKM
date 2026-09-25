@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class PrototypeSeeder extends Seeder
 {
@@ -286,6 +287,17 @@ class PrototypeSeeder extends Seeder
         | BAHAN BAKU
         |--------------------------------------------------------------------------
         */
+
+        // SEMENTARA (e2e): migration bahan_baku sudah dihapus dari skema, jadi
+        // bagian ini dilewati supaya migrate:fresh --seed tidak berhenti di sini.
+        // Pemilik seeder perlu menghapus bagian bahan baku secara permanen.
+        if (! Schema::hasTable('bahan_baku')) {
+            $this->command?->warn(
+                'PrototypeSeeder: tabel bahan_baku tidak ada, bagian bahan baku dilewati.'
+            );
+
+            return;
+        }
 
         $bahan = [];
 

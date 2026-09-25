@@ -212,7 +212,21 @@
                     </div>
                 @endif
 
-                <form>
+                {{-- SEMENTARA (e2e): form disambungkan ke keranjang sementara. --}}
+                @if ($errors->any())
+                    <div class="promo" style="display:block;margin-top:14px">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <form
+                    method="POST"
+                    action="{{ route('customer.cart.store') }}"
+                >
+                    @csrf
+
                     <p>
                         <strong>Pilih varian</strong>
                     </p>
@@ -238,9 +252,23 @@
                         @endforeach
                     </select>
 
+                    {{-- SEMENTARA (e2e) --}}
+                    <p>
+                        <strong><label for="jumlah">Jumlah</label></strong>
+                    </p>
+
+                    <input
+                        class="variant"
+                        type="number"
+                        id="jumlah"
+                        name="jumlah"
+                        min="1"
+                        value="1"
+                    >
+
                     <button
                         class="button"
-                        type="button"
+                        type="submit"
                         @disabled($totalStok < 1)
                     >
                         {{ $totalStok > 0

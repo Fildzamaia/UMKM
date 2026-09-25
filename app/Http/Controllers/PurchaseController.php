@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\MutasiStok; // SEMENTARA (e2e)
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -212,7 +213,25 @@ class PurchaseController extends Controller
 
             $purchaseTotal = 0;
 
+            // SEMENTARA (e2e): catat mutasi MASUK di transaction yang sama
+            // dengan penambahan stok. Pola ID MUT + 5 digit sama dengan Kasir.
+            $lastMutationId = DB::table('mutasi_stok')
+                ->where('id_mutasi', 'like', 'MUT%')
+                ->orderByDesc('id_mutasi')
+                ->lockForUpdate()
+                ->value('id_mutasi');
+
+            $mutationNumber = $lastMutationId
+                ? ((int) substr($lastMutationId, 3)) + 1
+                : 1;
+
             foreach ($details as $detail) {
+                // SEMENTARA (e2e): stok sebelum dibaca dengan lock untuk log mutasi.
+                $stockBefore = (int) DB::table('varian_produk')
+                    ->where('id_varian', $detail->id_varian)
+                    ->lockForUpdate()
+                    ->value('stok');
+
                 DB::table('varian_produk')
                     ->where('id_varian', $detail->id_varian)
                     ->increment(
@@ -220,6 +239,21 @@ class PurchaseController extends Controller
                         $detail->jumlah,
                         ['updated_at' => now()]
                     );
+
+                // SEMENTARA (e2e)
+                MutasiStok::create([
+                    'id_mutasi' =>
+                        'MUT'.str_pad($mutationNumber++, 5, '0', STR_PAD_LEFT),
+                    'id_varian' => $detail->id_varian,
+                    'id_akun' => Auth::id(),
+                    'tanggal_mutasi' => now(),
+                    'jenis_mutasi' => 'MASUK',
+                    'jumlah' => $detail->jumlah,
+                    'stok_sebelum' => $stockBefore,
+                    'stok_sesudah' => $stockBefore + (int) $detail->jumlah,
+                    'sumber' => $id,
+                    'created_at' => now(),
+                ]);
 
                 $purchaseTotal +=
                     (float) $detail->jumlah * (float) $detail->harga_satuan;

@@ -203,6 +203,15 @@
             <a href="{{ route('customer.catalog') }}">
                 Katalog
             </a>
+
+            {{-- SEMENTARA (e2e) --}}
+            <a href="{{ route('customer.cart') }}">
+                Keranjang ({{ array_sum(session('cart', [])) }})
+            </a>
+
+            <a href="{{ route('customer.orders.index') }}">
+                Pesanan
+            </a>
         </div>
     </nav>
 

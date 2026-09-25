@@ -677,11 +677,12 @@
                 Promo
             </a>
 
-            <a href="#">
+            {{-- SEMENTARA (e2e): tautan ke halaman pesanan & profil sementara --}}
+            <a href="{{ route('customer.orders.index') }}">
                 Pesanan
             </a>
 
-            <a href="#">
+            <a href="{{ route('customer.profile') }}">
                 Profil
             </a>
 
@@ -703,8 +704,9 @@
                 >
             </form>
 
+            {{-- SEMENTARA (e2e): tautan & jumlah item keranjang sementara --}}
             <a
-                href="#"
+                href="{{ route('customer.cart') }}"
                 class="icon-button"
                 title="Keranjang"
             >
@@ -718,7 +720,7 @@
                     <circle cx="18" cy="20" r="1"/>
                 </svg>
 
-                <span class="cart-count">0</span>
+                <span class="cart-count">{{ array_sum(session('cart', [])) }}</span>
             </a>
 
             <div class="profile-wrapper">
@@ -755,7 +757,8 @@
                         </span>
                     </div>
 
-                    <a href="#" class="dropdown-link">
+                    {{-- SEMENTARA (e2e) --}}
+                    <a href="{{ route('customer.profile') }}" class="dropdown-link">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="8" r="4"/>
 
@@ -767,7 +770,8 @@
                         Profil Saya
                     </a>
 
-                    <a href="#" class="dropdown-link">
+                    {{-- SEMENTARA (e2e) --}}
+                    <a href="{{ route('customer.orders.index') }}" class="dropdown-link">
                         <svg viewBox="0 0 24 24">
                             <path
                                 d="M6 3h12a2 2 0 0 1 2 2v16l-3-2-3 2-3-2-3 2-2-1.3V5a2 2 0 0 1 2-2Z"
