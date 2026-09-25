@@ -54,17 +54,19 @@ class VariantController extends Controller
             ]);
         }
 
-        $last = DB::table('varian_produk')
-            ->orderByDesc('id_varian')
-            ->value('id_varian');
-
-        $number = $last
-            ? ((int) substr($last, 3)) + 1
-            : 1;
+        // SEMENTARA (e2e): sebelumnya ID dibuat 4 digit (VAR0073) padahal data
+        // seeder 3 digit (VAR072). Karena diurutkan sebagai string, 'VAR072'
+        // selalu dianggap terbesar dan varian baru kedua bentrok PK. Di sini
+        // angka terbesar dicari secara numerik dan format disamakan 3 digit.
+        $number = DB::table('varian_produk')
+            ->where('id_varian', 'like', 'VAR%')
+            ->pluck('id_varian')
+            ->map(fn (string $id) => (int) substr($id, 3))
+            ->max() + 1;
 
         DB::table('varian_produk')->insert([
             'id_varian' =>
-                'VAR'.str_pad($number, 4, '0', STR_PAD_LEFT),
+                'VAR'.str_pad($number, 3, '0', STR_PAD_LEFT),
             'id_produk' => $idProduk,
             'ukuran' => $size,
             'warna' => $color,

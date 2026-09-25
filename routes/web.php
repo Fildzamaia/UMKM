@@ -21,6 +21,12 @@ use App\Http\Controllers\VariantController;
 // CUSTOMER MILIK TIM
 use App\Http\Controllers\Customers\Catalog;
 
+// SEMENTARA (e2e): controller alur belanja online sementara
+use App\Http\Controllers\Customers\Cart;
+use App\Http\Controllers\Customers\Checkout;
+use App\Http\Controllers\Customers\Customerorder;
+use App\Http\Controllers\Customers\Customerprofile;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -477,4 +483,39 @@ Route::middleware([
         Catalog::class,
         'show'
     ])->name('customer.products.show');
+
+    /*
+    | SEMENTARA (e2e): keranjang, checkout, pembayaran simulasi, pesanan,
+    | profil. Ganti ketika modul Customer resmi selesai.
+    */
+
+    Route::get('/customer/keranjang', [Cart::class, 'index'])
+        ->name('customer.cart');
+    Route::post('/customer/keranjang', [Cart::class, 'store'])
+        ->name('customer.cart.store');
+    Route::patch('/customer/keranjang/{idVarian}', [Cart::class, 'update'])
+        ->name('customer.cart.update');
+    Route::delete('/customer/keranjang/{idVarian}', [Cart::class, 'destroy'])
+        ->name('customer.cart.destroy');
+
+    Route::get('/customer/checkout', [Checkout::class, 'create'])
+        ->name('customer.checkout');
+    Route::post('/customer/checkout', [Checkout::class, 'store'])
+        ->name('customer.checkout.store');
+
+    Route::get('/customer/pesanan', [Customerorder::class, 'index'])
+        ->name('customer.orders.index');
+    Route::get('/customer/pesanan/{idPenjualan}', [Customerorder::class, 'show'])
+        ->name('customer.orders.show');
+    Route::get('/customer/pesanan/{idPenjualan}/bayar', [Customerorder::class, 'payment'])
+        ->name('customer.payment');
+    Route::post('/customer/pesanan/{idPenjualan}/bayar', [Customerorder::class, 'pay'])
+        ->name('customer.payment.pay');
+    Route::post('/customer/pesanan/{idPenjualan}/gagal', [Customerorder::class, 'fail'])
+        ->name('customer.payment.fail');
+    Route::patch('/customer/pesanan/{idPenjualan}/batal', [Customerorder::class, 'cancel'])
+        ->name('customer.orders.cancel');
+
+    Route::get('/customer/profil', [Customerprofile::class, 'show'])
+        ->name('customer.profile');
 });
