@@ -423,12 +423,34 @@ Route::middleware([
 Route::middleware([
     'auth',
     'role:KASIR'
-])->group(function () {
+])
+    ->prefix('kasir')
+    ->name('kasir.')
+    ->group(function () {
 
-    Route::get('/kasir', function () {
-        return view('kasir.dashboard');
-    })->name('kasir.dashboard');
-});
+        Route::get('/', fn () => view('kasir.dashboard'))
+            ->name('dashboard');
+
+        Route::get('/pos', [
+            \App\Http\Controllers\KasirController::class,
+            'pos'
+        ])->name('pos');
+
+        Route::post('/pos', [
+            \App\Http\Controllers\KasirController::class,
+            'store'
+        ])->name('store');
+
+        Route::get('/riwayat', [
+            \App\Http\Controllers\KasirController::class,
+            'riwayat'
+        ])->name('riwayat');
+
+        Route::get('/riwayat/{idPenjualan}', [
+            \App\Http\Controllers\KasirController::class,
+            'show'
+        ])->name('struk');
+    });
 
 
 /*
