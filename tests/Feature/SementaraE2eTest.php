@@ -4,10 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Akun;
 use Database\Seeders\PrototypeSeeder;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -17,36 +15,11 @@ use Tests\TestCase;
  */
 class SementaraE2eTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
-
-        $sqlite = DB::connection()->getDriverName() === 'sqlite';
-
-        // Migration 150017 memakai ALTER TABLE ... MODIFY (khusus MySQL).
-        // Di SQLite dilewati lalu perubahannya diterapkan manual di bawah.
-        $paths = collect(glob(database_path('migrations/*.php')))
-            ->reject(fn (string $path) => $sqlite && str_ends_with(
-                $path,
-                '_add_purchase_reference_to_pengeluaran_table.php'
-            ))
-            ->values()
-            ->all();
-
-        $this->assertSame(0, Artisan::call('migrate:fresh', [
-            '--path' => $paths,
-            '--realpath' => true,
-        ]));
-
-        if ($sqlite) {
-            Schema::table('pengeluaran', function (Blueprint $table) {
-                $table->string('id_pembelian')->nullable();
-            });
-
-            Schema::table('pengeluaran', function (Blueprint $table) {
-                $table->string('jenis_pengeluaran')->change();
-            });
-        }
 
         // Seeder asli dipakai sebagai data; sekaligus memastikan tidak lagi
         // berhenti di bagian bahan_baku.

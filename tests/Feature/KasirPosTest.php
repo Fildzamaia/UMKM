@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Akun;
 use App\Models\MutasiStok;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
@@ -12,27 +12,11 @@ use Tests\TestCase;
 
 class KasirPosTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Migration 2026_09_23_150017 memakai ALTER TABLE ... MODIFY yang
-        // khusus MySQL sehingga gagal di SQLite (DB test di phpunit.xml).
-        // Migration itu hanya mengubah tabel pengeluaran, di luar modul Kasir,
-        // jadi dilewati di sini. migrate:fresh membuat skema bersih di setiap
-        // test, baik di SQLite :memory: maupun di database test MySQL.
-        $paths = collect(glob(database_path('migrations/*.php')))
-            ->reject(fn (string $path) => str_ends_with(
-                $path,
-                '_add_purchase_reference_to_pengeluaran_table.php'
-            ))
-            ->values()
-            ->all();
-
-        $this->assertSame(0, Artisan::call('migrate:fresh', [
-            '--path' => $paths,
-            '--realpath' => true,
-        ]));
 
         $this->seedFixtures();
     }
